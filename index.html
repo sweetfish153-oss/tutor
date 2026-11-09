@@ -345,8 +345,9 @@ Topics we covered:
 ${topic}
 Learning notes: 
 ${data.folderUrl}
-"${data.verse}"`;
 
+_${data.verse}_`;
+        
         // Masukkan hasil ke card WA & scroll ke bawah
         document.getElementById('waTextContent').textContent = chatTemplate;
         document.getElementById('waResultCard').style.display = 'block';
