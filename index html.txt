@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Lesson Logger</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-green: #dceed3;
+      --card-white: #ffffff;
+      --accent-orange: #ff6b35;
+      --accent-orange-hover: #e85924;
+      --text-dark: #203a27;
+      --text-gray: #68796b;
+      --border-gray: #e2e8e3;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', sans-serif; }
+    body {
+      background-color: var(--bg-green);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 24px;
+      color: var(--text-dark);
+    }
+    .card {
+      background: var(--card-white);
+      max-width: 540px;
+      width: 100%;
+      border-radius: 28px;
+      padding: 32px;
+      box-shadow: 0 12px 32px rgba(32, 58, 39, 0.08);
+    }
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 24px;
+    }
+    .title {
+      font-size: 1.4rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .badge-icon {
+      width: 32px;
+      height: 32px;
+      background: #ffede6;
+      color: var(--accent-orange);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+    }
+    .form-group { margin-bottom: 18px; }
+    label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-gray); margin-bottom: 6px; }
+    input, select, textarea {
+      width: 100%;
+      padding: 12px 16px;
+      border: 1.5px solid var(--border-gray);
+      border-radius: 14px;
+      font-size: 0.95rem;
+      color: var(--text-dark);
+      outline: none;
+      transition: all 0.2s;
+    }
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--accent-orange);
+      box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.15);
+    }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    textarea { height: 110px; resize: vertical; }
+    .btn-submit {
+      width: 100%;
+      background: var(--accent-orange);
+      color: white;
+      border: none;
+      padding: 14px;
+      border-radius: 14px;
+      font-weight: 700;
+      font-size: 1rem;
+      cursor: pointer;
+      box-shadow: 0 8px 16px rgba(255, 107, 53, 0.25);
+      transition: background 0.2s;
+    }
+    .btn-submit:hover { background: var(--accent-orange-hover); }
+    .btn-submit:disabled { opacity: 0.6; cursor: not-allowed; }
+  </style>
+</head>
+<body>
+
+<div class="card">
+  <div class="header">
+    <div class="title">
+      <div class="badge-icon">●</div>
+      Log Pertemuan
+    </div>
+  </div>
+
+  <form id="logForm">
+    <div class="form-group">
+      <label>Nama Murid</label>
+      <select id="studentSelect" required>
+        <option value="">Memuat data murid...</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label>Tanggal</label>
+      <input type="date" id="dateInput" required>
+    </div>
+
+    <div class="grid-2">
+      <div class="form-group">
+        <label>Starts</label>
+        <input type="time" id="startsInput" required>
+      </div>
+      <div class="form-group">
+        <label>Ends</label>
+        <input type="time" id="endsInput" required>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>Topic</label>
+      <textarea id="topicInput" placeholder="Stoichiometry&#10;- Molecular weight&#10;- Hydrates" required></textarea>
+    </div>
+
+    <div class="form-group">
+      <label>Upload File (Max 10 File: PDF / Gambar)</label>
+      <input type="file" id="fileInput" multiple accept="image/*,.pdf">
+    </div>
+
+    <button type="submit" class="btn-submit" id="submitBtn">Simpan Catatan</button>
+  </form>
+</div>
+
+<script>
+  // GANTI DENGAN URL WEB APP HASIL DEPLOY GOOGLE APPS SCRIPT ANDA
+  const GAS_API_URL = "https://script.google.com/macros/s/AKfycbxuuru20rq1qjzwX2JSgv-KQh1SKlM20Q8DvyyPJR5Y1ZUhg95kPIz7bpaNIqFUUhTvLw/exec";
+
+  // 1. Set default Date ke Hari Ini (Local Time)
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('dateInput').value = today;
+
+  // 2. Load Dropdown Murid dari Master Sheet
+  fetch(GAS_API_URL)
+    .then(res => res.json())
+    .then(res => {
+      const select = document.getElementById('studentSelect');
+      select.innerHTML = '<option value="">-- Pilih Murid --</option>';
+      res.data.forEach(s => {
+        const opt = document.createElement('option');
+        opt.value = s.sheetId;
+        opt.dataset.name = s.name;
+        opt.textContent = s.name;
+        select.appendChild(opt);
+      });
+    });
+
+  // 3. Konversi File ke Base64
+  const toBase64 = file => new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => resolve({ name: file.name, mimeType: file.type, base64: reader.result });
+    reader.onerror = error => reject(error);
+  });
+
+  // 4. Submit Form
+  document.getElementById('logForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('submitBtn');
+    btn.disabled = true;
+    btn.textContent = "Mengunggah & Menyimpan...";
+
+    const select = document.getElementById('studentSelect');
+    const studentName = select.options[select.selectedIndex].dataset.name;
+    const sheetId = select.value;
+    const fileElements = document.getElementById('fileInput').files;
+
+    if (fileElements.length > 10) {
+      alert("Maksimal 10 file!");
+      btn.disabled = false;
+      return;
+    }
+
+    const files = await Promise.all(Array.from(fileElements).map(toBase64));
+
+    const payload = {
+      name: studentName,
+      sheetId: sheetId,
+      date: document.getElementById('dateInput').value,
+      starts: document.getElementById('startsInput').value,
+      ends: document.getElementById('endsInput').value,
+      topic: document.getElementById('topicInput').value,
+      files: files
+    };
+
+    fetch(GAS_API_URL, {
+      method: "POST",
+      body: JSON.stringify(payload)
+    })
+    .then(res => res.json())
+    .then(data => {
+      if(data.status === "success") {
+        alert("Berhasil! Dicatat sebagai Pertemuan ke-" + data.meeting);
+        document.getElementById('logForm').reset();
+        document.getElementById('dateInput').value = today;
+      } else {
+        alert("Gagal: " + data.message);
+      }
+    })
+    .catch(err => alert("Terjadi error: " + err))
+    .finally(() => {
+      btn.disabled = false;
+      btn.textContent = "Simpan Catatan";
+    });
+  });
+</script>
+
+</body>
+</html>
