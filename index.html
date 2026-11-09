@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <title>Lesson Logger</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Font Plus Jakarta Sans sesuai vibe modern/clean -->
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     :root {
@@ -11,23 +12,36 @@
       --card-white: #ffffff;
       --accent-orange: #ff6b35;
       --accent-orange-hover: #e85924;
+      --accent-wa: #25d366;
+      --accent-wa-hover: #1eb956;
       --text-dark: #203a27;
       --text-gray: #68796b;
       --border-gray: #e2e8e3;
     }
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', sans-serif; }
+    * { 
+      box-sizing: border-box; 
+      margin: 0; 
+      padding: 0; 
+      font-family: 'Plus Jakarta Sans', sans-serif; 
+    }
     body {
       background-color: var(--bg-green);
       min-height: 100vh;
       display: flex;
       justify-content: center;
       align-items: center;
-      padding: 24px;
+      padding: 24px 16px;
       color: var(--text-dark);
+    }
+    .container {
+      max-width: 520px;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
     }
     .card {
       background: var(--card-white);
-      max-width: 540px;
       width: 100%;
       border-radius: 28px;
       padding: 32px;
@@ -40,15 +54,15 @@
       margin-bottom: 24px;
     }
     .title {
-      font-size: 1.4rem;
+      font-size: 1.35rem;
       font-weight: 700;
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 12px;
     }
     .badge-icon {
-      width: 32px;
-      height: 32px;
+      width: 34px;
+      height: 34px;
       background: #ffede6;
       color: var(--accent-orange);
       border-radius: 50%;
@@ -56,9 +70,18 @@
       align-items: center;
       justify-content: center;
       font-weight: bold;
+      font-size: 1.1rem;
     }
-    .form-group { margin-bottom: 18px; }
-    label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-gray); margin-bottom: 6px; }
+    .form-group { 
+      margin-bottom: 18px; 
+    }
+    label { 
+      display: block; 
+      font-size: 0.85rem; 
+      font-weight: 600; 
+      color: var(--text-gray); 
+      margin-bottom: 6px; 
+    }
     input, select, textarea {
       width: 100%;
       padding: 12px 16px;
@@ -66,15 +89,25 @@
       border-radius: 14px;
       font-size: 0.95rem;
       color: var(--text-dark);
+      background-color: #fdfdfd;
       outline: none;
-      transition: all 0.2s;
+      transition: all 0.2s ease;
     }
     input:focus, select:focus, textarea:focus {
       border-color: var(--accent-orange);
+      background-color: #fff;
       box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.15);
     }
-    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-    textarea { height: 110px; resize: vertical; }
+    .grid-2 { 
+      display: grid; 
+      grid-template-columns: 1fr 1fr; 
+      gap: 14px; 
+    }
+    textarea { 
+      height: 120px; 
+      resize: vertical; 
+      line-height: 1.4;
+    }
     .btn-submit {
       width: 100%;
       background: var(--accent-orange);
@@ -86,77 +119,137 @@
       font-size: 1rem;
       cursor: pointer;
       box-shadow: 0 8px 16px rgba(255, 107, 53, 0.25);
+      transition: background 0.2s, transform 0.1s;
+    }
+    .btn-submit:hover { 
+      background: var(--accent-orange-hover); 
+    }
+    .btn-submit:active {
+      transform: scale(0.99);
+    }
+    .btn-submit:disabled { 
+      opacity: 0.6; 
+      cursor: not-allowed; 
+    }
+
+    /* Tampilan Kartu Hasil WhatsApp */
+    #waResultCard {
+      display: none;
+      border: 2px dashed #b7e4c7;
+      background: #f7fdf9;
+    }
+    .wa-box {
+      background: white;
+      border: 1px solid var(--border-gray);
+      border-radius: 14px;
+      padding: 16px;
+      font-size: 0.9rem;
+      white-space: pre-wrap;
+      word-break: break-word;
+      line-height: 1.5;
+      margin-bottom: 16px;
+      color: #1a2f20;
+    }
+    .btn-copy {
+      width: 100%;
+      background: var(--accent-wa);
+      color: white;
+      border: none;
+      padding: 13px;
+      border-radius: 14px;
+      font-weight: 700;
+      font-size: 0.95rem;
+      cursor: pointer;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
       transition: background 0.2s;
     }
-    .btn-submit:hover { background: var(--accent-orange-hover); }
-    .btn-submit:disabled { opacity: 0.6; cursor: not-allowed; }
+    .btn-copy:hover {
+      background: var(--accent-wa-hover);
+    }
   </style>
 </head>
 <body>
 
-<div class="card">
-  <div class="header">
-    <div class="title">
-      <div class="badge-icon">●</div>
-      Log Pertemuan
+<div class="container">
+  <!-- FORM UTAMA -->
+  <div class="card">
+    <div class="header">
+      <div class="title">
+        <div class="badge-icon">●</div>
+        Log Pertemuan
+      </div>
     </div>
+
+    <form id="logForm">
+      <div class="form-group">
+        <label>Nama Murid</label>
+        <select id="studentSelect" required>
+          <option value="">Memuat data murid...</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Tanggal</label>
+        <input type="date" id="dateInput" required>
+      </div>
+
+      <div class="grid-2">
+        <div class="form-group">
+          <label>Starts</label>
+          <input type="time" id="startsInput" required>
+        </div>
+        <div class="form-group">
+          <label>Ends</label>
+          <input type="time" id="endsInput" required>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Topic</label>
+        <textarea id="topicInput" placeholder="Stoichiometry&#10;- Molecular weight&#10;- Hydrates" required></textarea>
+      </div>
+
+      <div class="form-group">
+        <label>Upload File (Max 10 File: PDF / Gambar)</label>
+        <input type="file" id="fileInput" multiple accept="image/*,.pdf">
+      </div>
+
+      <button type="submit" class="btn-submit" id="submitBtn">Simpan Catatan</button>
+    </form>
   </div>
 
-  <form id="logForm">
-    <div class="form-group">
-      <label>Nama Murid</label>
-      <select id="studentSelect" required>
-        <option value="">Memuat data murid...</option>
-      </select>
-    </div>
-
-    <div class="form-group">
-      <label>Tanggal</label>
-      <input type="date" id="dateInput" required>
-    </div>
-
-    <div class="grid-2">
-      <div class="form-group">
-        <label>Starts</label>
-        <input type="time" id="startsInput" required>
-      </div>
-      <div class="form-group">
-        <label>Ends</label>
-        <input type="time" id="endsInput" required>
+  <!-- KARTU HASIL CHAT WHATSAPP -->
+  <div class="card" id="waResultCard">
+    <div class="header" style="margin-bottom: 12px;">
+      <div class="title" style="font-size: 1.1rem; color: #1b4332;">
+        💬 Siap Dikirim ke WhatsApp
       </div>
     </div>
-
-    <div class="form-group">
-      <label>Topic</label>
-      <textarea id="topicInput" placeholder="Stoichiometry&#10;- Molecular weight&#10;- Hydrates" required></textarea>
-    </div>
-
-    <div class="form-group">
-      <label>Upload File (Max 10 File: PDF / Gambar)</label>
-      <input type="file" id="fileInput" multiple accept="image/*,.pdf">
-    </div>
-
-    <button type="submit" class="btn-submit" id="submitBtn">Simpan Catatan</button>
-  </form>
+    <div class="wa-box" id="waTextContent"></div>
+    <button type="button" class="btn-copy" id="copyBtn" onclick="copyToClipboard()">
+      📋 Copy Chat Message
+    </button>
+  </div>
 </div>
 
 <script>
-  const GAS_API_URL = "https://script.google.com/macros/s/AKfycbxuuru20rq1qjzwX2JSgv-KQh1SKlM20Q8DvyyPJR5Y1ZUhg95kPIz7bpaNIqFUUhTvLw/exec";
+  // URL Web App GAS Anda
+  const GAS_API_URL = "https://script.google.com/macros/s/AKfycbxfhOriXTpq-DJSmVbgpB9c-AzohwnaAO654aQG6iQWW4LfSFrotO5IS3_MQTf1xCC5pg/exec";
 
-  // 1. Set default Date ke Hari Ini (WIB / Tanggal Lokal Komputer)
-  const today = new Date();
-  const yyyy = today.getFullYear();
-  const mm = String(today.getMonth() + 1).padStart(2, '0');
-  const dd = String(today.getDate()).padStart(2, '0');
+  // 1. Default Tanggal Hari Ini (WIB / Waktu Lokal)
+  const now = new Date();
+  const yyyy = now.getFullYear();
+  const mm = String(now.getMonth() + 1).padStart(2, '0');
+  const dd = String(now.getDate()).padStart(2, '0');
   document.getElementById('dateInput').value = `${yyyy}-${mm}-${dd}`;
 
-  // 2. Load Dropdown Murid
+  // 2. Mengambil Daftar Murid dari Master Sheet
   const select = document.getElementById('studentSelect');
   fetch(GAS_API_URL)
-    .then(res => {
-      if (!res.ok) throw new Error("HTTP error " + res.status);
-      return res.json();
-    })
+    .then(res => res.json())
     .then(res => {
       if(res.status === "success" && res.data && res.data.length > 0) {
         select.innerHTML = '<option value="">-- Pilih Murid --</option>';
@@ -172,11 +265,11 @@
       }
     })
     .catch(err => {
-      console.error("Gagal load murid:", err);
-      select.innerHTML = '<option value="">Gagal memuat murid (Cek Deploy GAS)</option>';
+      console.error(err);
+      select.innerHTML = '<option value="">Gagal memuat murid (Periksa Master Sheet)</option>';
     });
 
-  // 3. Konversi File ke Base64
+  // 3. Konversi File ke Format Base64
   const toBase64 = file => new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.readAsDataURL(file);
@@ -184,17 +277,18 @@
     reader.onerror = error => reject(error);
   });
 
-  // 4. Submit Form
+  // 4. Submit Data Form
   document.getElementById('logForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const btn = document.getElementById('submitBtn');
 
     const studentSelect = document.getElementById('studentSelect');
-    const studentName = studentSelect.options[studentSelect.selectedIndex].dataset.name;
+    const selectedOption = studentSelect.options[studentSelect.selectedIndex];
+    const studentName = selectedOption.dataset.name;
     const sheetId = studentSelect.value;
 
     if (!sheetId) {
-      alert("Silakan pilih nama murid terlebih dahulu!");
+      alert("Silakan pilih murid terlebih dahulu!");
       return;
     }
 
@@ -210,22 +304,25 @@
     try {
       const files = await Promise.all(Array.from(fileElements).map(toBase64));
 
+      const rawDate = document.getElementById('dateInput').value;
+      const starts = document.getElementById('startsInput').value;
+      const ends = document.getElementById('endsInput').value;
+      const topic = document.getElementById('topicInput').value;
+
       const payload = {
         name: studentName,
         sheetId: sheetId,
-        date: document.getElementById('dateInput').value,
-        starts: document.getElementById('startsInput').value,
-        ends: document.getElementById('endsInput').value,
-        topic: document.getElementById('topicInput').value,
+        date: rawDate,
+        starts: starts,
+        ends: ends,
+        topic: topic,
         files: files
       };
 
-      // Trik bypass CORS: gunakan text/plain
+      // Request ke GAS menggunakan header text/plain untuk bypass CORS
       const response = await fetch(GAS_API_URL, {
         method: "POST",
-        headers: {
-          "Content-Type": "text/plain;charset=utf-8",
-        },
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
         body: JSON.stringify(payload)
       });
 
@@ -233,20 +330,57 @@
 
       if (data.status === "success") {
         alert("Berhasil! Dicatat sebagai Pertemuan ke-" + data.meeting);
-        document.getElementById('logForm').reset();
-        document.getElementById('dateInput').value = `${yyyy}-${mm}-${dd}`;
+
+        // Format tanggal rapi: "9 Nov 2026"
+        const d = new Date(rawDate);
+        const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+        const formattedFullDate = `${d.getDate()} ${monthNames[d.getMonth()]} ${d.getFullYear()}`;
+
+        // Format Chat WhatsApp
+        const chatTemplate = 
+`Tutor "${studentName}" (${data.monthName} meeting-${data.meeting})
+Date: ${formattedFullDate}
+Time: ${starts}-${ends}
+Topics we covered:
+${topic}
+
+Learning notes: 
+${data.folderUrl}
+
+"${data.verse}"`;
+
+        // Masukkan hasil ke card WA & scroll ke bawah
+        document.getElementById('waTextContent').textContent = chatTemplate;
+        document.getElementById('waResultCard').style.display = 'block';
+        document.getElementById('waResultCard').scrollIntoView({ behavior: 'smooth' });
+
+        // Reset input topik & file
+        document.getElementById('fileInput').value = "";
+        document.getElementById('topicInput').value = "";
       } else {
-        alert("Gagal dari Server: " + data.message);
+        alert("Gagal: " + data.message);
       }
 
     } catch (err) {
-      console.error("Error submit:", err);
-      alert("Terjadi kendala saat mengirim data: " + err.message);
+      console.error(err);
+      alert("Terjadi kendala saat mengirim: " + err.message);
     } finally {
       btn.disabled = false;
       btn.textContent = "Simpan Catatan";
     }
   });
+
+  // 5. Fungsi Salin Pesan ke Clipboard
+  function copyToClipboard() {
+    const text = document.getElementById('waTextContent').textContent;
+    navigator.clipboard.writeText(text).then(() => {
+      const copyBtn = document.getElementById('copyBtn');
+      copyBtn.textContent = "✅ Berhasil Di-copy!";
+      setTimeout(() => {
+        copyBtn.textContent = "📋 Copy Chat Message";
+      }, 2000);
+    });
+  }
 </script>
 
 </body>
