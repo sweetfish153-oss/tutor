@@ -141,26 +141,39 @@
 </div>
 
 <script>
-  // GANTI DENGAN URL WEB APP HASIL DEPLOY GOOGLE APPS SCRIPT ANDA
   const GAS_API_URL = "https://script.google.com/macros/s/AKfycbxuuru20rq1qjzwX2JSgv-KQh1SKlM20Q8DvyyPJR5Y1ZUhg95kPIz7bpaNIqFUUhTvLw/exec";
 
-  // 1. Set default Date ke Hari Ini (Local Time)
-  const today = new Date().toISOString().split('T')[0];
-  document.getElementById('dateInput').value = today;
+  // 1. Set default Date ke Hari Ini (WIB / Tanggal Lokal Komputer)
+  const today = new Date();
+  const yyyy = today.getFullYear();
+  const mm = String(today.getMonth() + 1).padStart(2, '0');
+  const dd = String(today.getDate()).padStart(2, '0');
+  document.getElementById('dateInput').value = `${yyyy}-${mm}-${dd}`;
 
-  // 2. Load Dropdown Murid dari Master Sheet
+  // 2. Load Dropdown Murid
+  const select = document.getElementById('studentSelect');
   fetch(GAS_API_URL)
-    .then(res => res.json())
     .then(res => {
-      const select = document.getElementById('studentSelect');
-      select.innerHTML = '<option value="">-- Pilih Murid --</option>';
-      res.data.forEach(s => {
-        const opt = document.createElement('option');
-        opt.value = s.sheetId;
-        opt.dataset.name = s.name;
-        opt.textContent = s.name;
-        select.appendChild(opt);
-      });
+      if (!res.ok) throw new Error("HTTP error " + res.status);
+      return res.json();
+    })
+    .then(res => {
+      if(res.status === "success" && res.data && res.data.length > 0) {
+        select.innerHTML = '<option value="">-- Pilih Murid --</option>';
+        res.data.forEach(s => {
+          const opt = document.createElement('option');
+          opt.value = s.sheetId;
+          opt.dataset.name = s.name;
+          opt.textContent = s.name;
+          select.appendChild(opt);
+        });
+      } else {
+        select.innerHTML = '<option value="">Data murid kosong di Master Sheet</option>';
+      }
+    })
+    .catch(err => {
+      console.error("Gagal load murid:", err);
+      select.innerHTML = '<option value="">Gagal memuat murid (Cek Deploy GAS)</option>';
     });
 
   // 3. Konversi File ke Base64
@@ -175,51 +188,64 @@
   document.getElementById('logForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const btn = document.getElementById('submitBtn');
-    btn.disabled = true;
-    btn.textContent = "Mengunggah & Menyimpan...";
 
-    const select = document.getElementById('studentSelect');
-    const studentName = select.options[select.selectedIndex].dataset.name;
-    const sheetId = select.value;
-    const fileElements = document.getElementById('fileInput').files;
+    const studentSelect = document.getElementById('studentSelect');
+    const studentName = studentSelect.options[studentSelect.selectedIndex].dataset.name;
+    const sheetId = studentSelect.value;
 
-    if (fileElements.length > 10) {
-      alert("Maksimal 10 file!");
-      btn.disabled = false;
+    if (!sheetId) {
+      alert("Silakan pilih nama murid terlebih dahulu!");
       return;
     }
 
-    const files = await Promise.all(Array.from(fileElements).map(toBase64));
+    const fileElements = document.getElementById('fileInput').files;
+    if (fileElements.length > 10) {
+      alert("Maksimal 10 file!");
+      return;
+    }
 
-    const payload = {
-      name: studentName,
-      sheetId: sheetId,
-      date: document.getElementById('dateInput').value,
-      starts: document.getElementById('startsInput').value,
-      ends: document.getElementById('endsInput').value,
-      topic: document.getElementById('topicInput').value,
-      files: files
-    };
+    btn.disabled = true;
+    btn.textContent = "Mengunggah & Menyimpan...";
 
-    fetch(GAS_API_URL, {
-      method: "POST",
-      body: JSON.stringify(payload)
-    })
-    .then(res => res.json())
-    .then(data => {
-      if(data.status === "success") {
+    try {
+      const files = await Promise.all(Array.from(fileElements).map(toBase64));
+
+      const payload = {
+        name: studentName,
+        sheetId: sheetId,
+        date: document.getElementById('dateInput').value,
+        starts: document.getElementById('startsInput').value,
+        ends: document.getElementById('endsInput').value,
+        topic: document.getElementById('topicInput').value,
+        files: files
+      };
+
+      // Trik bypass CORS: gunakan text/plain
+      const response = await fetch(GAS_API_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "text/plain;charset=utf-8",
+        },
+        body: JSON.stringify(payload)
+      });
+
+      const data = await response.json();
+
+      if (data.status === "success") {
         alert("Berhasil! Dicatat sebagai Pertemuan ke-" + data.meeting);
         document.getElementById('logForm').reset();
-        document.getElementById('dateInput').value = today;
+        document.getElementById('dateInput').value = `${yyyy}-${mm}-${dd}`;
       } else {
-        alert("Gagal: " + data.message);
+        alert("Gagal dari Server: " + data.message);
       }
-    })
-    .catch(err => alert("Terjadi error: " + err))
-    .finally(() => {
+
+    } catch (err) {
+      console.error("Error submit:", err);
+      alert("Terjadi kendala saat mengirim data: " + err.message);
+    } finally {
       btn.disabled = false;
       btn.textContent = "Simpan Catatan";
-    });
+    }
   });
 </script>
 
