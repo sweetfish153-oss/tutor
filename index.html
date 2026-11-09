@@ -338,15 +338,13 @@
 
         // Format Chat WhatsApp
         const chatTemplate = 
-`Tutor "${studentName}" (${data.monthName} meeting-${data.meeting})
+`Tutor ${studentName} (${data.monthName} meeting-${data.meeting})
 Date: ${formattedFullDate}
 Time: ${starts}-${ends}
 Topics we covered:
 ${topic}
-
 Learning notes: 
 ${data.folderUrl}
-
 "${data.verse}"`;
 
         // Masukkan hasil ke card WA & scroll ke bawah
